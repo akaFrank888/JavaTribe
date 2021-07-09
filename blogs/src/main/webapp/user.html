@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+
+    <title>博客首页</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+    <script src="js/jquery-3.3.1.js"></script>
+    <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <style>
+        #blogSymbol {
+            width: 50px;
+            height: 50px;
+            display: inline-block;
+        }
+        #frame {
+            width: 70%;
+            height: 650px;
+            border: #f9f9f9 solid 1px;
+            border-radius: 5px;
+            box-shadow: 1px 1px 1px 1px #8c8c8c;
+            margin: 30px auto auto;
+
+        }
+        .paddingTop {
+            padding-top: 10px;
+        }
+        .head {
+            border-bottom: 2px solid #8c8c8c;
+            padding-bottom: 5px;
+        }
+        .box {
+            border: 1px solid #bbb;
+            margin: 50px auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .table {
+            height: 600px;
+            border-spacing: 0;
+            color: #B06A68;
+        }
+
+        .table thead tr td {
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+            text-align: center;
+            font-weight: bold;
+            font-size: 30px;
+        }
+
+        .table tbody tr td {
+            width: 300px;
+            border-bottom: 1px solid #ffffff;
+            padding: 10px 20px;
+        }
+
+        .table thead tr td:nth-child(1),
+        .table tbody tr td:nth-child(1) {
+            width: 60%;
+            padding: 10px 20px;
+        }
+
+        .table thead tr td:nth-child(2),
+        .table tbody tr td:nth-child(3) {
+            width: 40%;
+        }
+
+    </style>
+
+    <script>
+        let content;
+        $(function () {
+            /*获取数据使用get请求*/
+            $.get("user/findUser", {}, function (data) {
+                const msg = "欢迎回来，" + data.nickname;
+                $("#dropdownMenu1").html(msg);
+            });
+
+            // 给“搜索”绑定单击事件，实现路径的跳转
+            $("#search_button").click(function () {
+                // 获取输入框内容
+                content = $("#search_input").val();
+                // 尝试保存content，然后刷新，来显示目标页面
+                // （没有实现带参数的url进行页面跳转，它总是404。虽然不符合实际，但为了先实现功能，就只能不带参进行跳转了）
+                window.sessionStorage.setItem("content", JSON.stringify(content));
+                // 刷新页面
+                location.reload();
+            });
+
+
+            // 页面加载完成后，调用load()   不传参默认第一页
+            // 尝试取出content
+            content = JSON.parse(window.sessionStorage.getItem("content"));
+            load(null,content);
+            // 加载完之后立马清除掉sessionStorage
+            clearContent();
+
+            // 为表格的每一行添加单击事件，来查看博客内容的详情
+            // （只会这个最笨的方法）
+            $("#tr0").click(function () {
+                const date = $("#date0").text();
+                const account = $("#account0").text();
+                if (date != null && date.length >10) {
+                    saveDateAndAccount(date, account);
+                }
+            });
+            $("#tr1").click(function () {
+                const date = $("#date1").text();
+                const account = $("#account1").text();
+                if (date != null && date.length >10) {
+                    saveDateAndAccount(date, account);
+                }
+            });
+            $("#tr2").click(function () {
+                const date = $("#date2").text();
+                const account = $("#account2").text();
+                if (date != null && date.length >10) {
+                    saveDateAndAccount(date, account);
+                }
+            });
+            $("#tr3").click(function () {
+                const date = $("#date3").text();
+                const account = $("#account3").text();
+                if (date != null && date.length >10) {
+                    saveDateAndAccount(date, account);
+                }
+            });
+            $("#tr4").click(function () {
+                const date = $("#date4").text();
+                const account = $("#account4").text();
+                if (date != null && date.length >10) {
+                    saveDateAndAccount(date, account);
+                }
+            });
+        });
+
+        // 因为在点击上一页/下一页后，仍然是发送ajax请求。为了避免代码冗余，所以封装了如下的方法
+        function load(currentPage,content) {
+            // 一、发送ajax请求，返回pb，设置totalPage和totalCount
+            // flag=false  -->   显示所有博客；  flag=true   -->   显示我的博客
+            $.get("blog/pageQuery",{currentPage:currentPage,content:content},function (pb) {
+                let i;
+                $("#totalPage").html(pb.totalPage);
+                $("#totalCount").html(pb.totalCount);
+
+                // 二、博客列表的展示
+                for (i = 0; i < pb.list.length; i++) {
+                    const blog = pb.list[i];
+                    $("#blog" + i).html(blog.title);
+                    $("#date" + i).html(blog.date);
+                    $("#account" + i).html(blog.account);
+                }
+                for (i = pb.list.length; i < pb.pageSize; i++) {
+                    $("#blog" + i).html(" ");
+                    $("#date" + i).html(" ");
+                    $("#account" + i).html(" ");
+                }
+
+                // 三、设置翻页组件
+                // 因为全部用的是ajax异步请求，所以不能让页面跳转（href就属于同步请求，而不能设置href）。此处区别“#”与“javascript:void(0)”
+
+                // 上一页：
+                let prePage = pb.currentPage - 1;
+                if (prePage <= 0) {
+                    prePage = 1;
+                }
+                $("#pre").click(function () {
+                    load(prePage,content)
+                });
+
+                // 下一页：（换一种不用if的算法）
+                let folPage;
+                (pb.currentPage === pb.totalPage) ? folPage = pb.totalPage : folPage = pb.currentPage + 1;
+                $("#fol").click(function () {
+                    load(folPage,content);
+                });
+            });
+        }
+
+        // 设计一个方法  单机博客查看内容的ajax请求（将来被每个tr调用）
+        function saveDateAndAccount(date,account) {
+            $.get("blog/saveDateAndAccount",{date:date,account:account},function (data) {
+                if (data.flag) {
+                    // date成功保存入session，跳转页面
+                    window.location.href = "showOne.html"
+                } else {
+                    alert("发送日期失败");
+                }
+            });
+        }
+
+        // 设计一个方法   清除存储的SessionStorage数据（存有content）
+        function clearContent() {
+            window.sessionStorage.removeItem("content");
+        }
+        // 设计一个方法   清除存储的SessionStorage数据（存有account）
+        // 如果没有这个方法，则在同一个页面中退出旧用户登录新用户后还是旧用户的信息
+        function clearAccount() {
+            window.sessionStorage.removeItem("account");
+        }
+
+    </script>
+</head>
+<body>
+
+   <!-- 一、页眉部分-->
+   <!--header是语义化标签-->
+   <!--定义容器，100%类型-->
+   <header class="container-fluid head">
+
+       <!--为了调节距离-->
+       <div class="col-md-2"></div>
+       <div class="col-md-2">
+           <!--class是响应式-->
+           <img src="img/blogSymbol.jpg" id="blogSymbol" class="img-responsive"  alt=""/>
+           <span>Java Tribe</span>
+       </div>
+
+       <div class="col-md-3">
+           <div class="form-group">
+               <input type="text" id="search_input" class="form-control" placeholder="输入要搜索的博客内容"
+                      style="margin-top: 10px">
+           </div>
+       </div>
+       <div class="col-md-1">
+           <button id="search_button" type="button" style="margin-top: 15px"> 搜索 </button>
+       </div>
+
+       <!--为了调节距离-->
+       <div class="col-md-1"></div>
+       <div class="col-md-2 paddingTop">
+
+           <!--用户界面（已登录）-->
+           <div id="user">
+               <!--以下是bootStrap下拉菜单-->
+               <div class="dropdown">
+                   <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                       我的选项
+                   </button>
+                   <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                       <li><a href="writeBlog.html">写博客</a></li>
+                       <li><a href="myBlog.html">我的博客</a></li>
+                       <li><a href="userInfo.html">我的资料</a></li>
+                       <li role="separator" class="divider"></li>
+                       <li><a href="user.html">首页</a></li>
+                       <li><a href="/user/exit" onclick="clearAccount()">退出</a></li>
+                   </ul>
+               </div>
+
+           </div>
+       </div>
+       <!--为了调节距离-->
+       <div class="col-md-1"></div>
+   </header>
+   <!-- 二、主体部分-->
+   <div class="container main"></div>
+   <!--定义容器，留白类型-->
+   <div id="blogFrame">
+       <!--为了调节距离-->
+       <div class="col-md-1"></div>
+
+       <!--实现表格也是响应式-->
+       <div class="box col-md-10">
+           <table data-role="table" id="blogList" class="table ui-responsive table-hover">
+               <thead>
+               <tr>
+                   <td>主题博客</td>
+                   <td>作者</td>
+               </tr>
+               </thead>
+               <tbody>
+               <tr id="tr0" class="listener">
+                   <td>
+                       <h3 id="blog0" >第一篇博客</h3>
+                       <h5 id="date0">时间</h5>
+                   </td>
+                   <td id="account0" style="text-align: center;vertical-align: middle">账户</td>
+               </tr>
+               <tr id="tr1" class="listener">
+                   <td>
+                       <h3 id="blog1">第二篇博客</h3>
+                       <h5 id="date1">时间</h5>
+                   </td>
+                   <td id="account1" style="text-align: center;vertical-align: middle">账户</td>
+               </tr>
+               <tr id="tr2" class="listener">
+                   <td>
+                       <h3 id="blog2">第三篇博客</h3>
+                       <h5 id="date2">时间</h5>
+                   </td>
+                   <td id="account2" style="text-align: center;vertical-align: middle">账户</td>
+               </tr>
+               <tr id="tr3" class="listener">
+                   <td>
+                       <h3 id="blog3">第四篇博客</h3>
+                       <h5 id="date3">时间</h5>
+                   </td>
+                   <td id="account3" style="text-align: center;vertical-align: middle">账户</td>
+               </tr>
+               <tr id="tr4" class="listener">
+                   <td>
+                       <h3 id="blog4">第五篇博客</h3>
+                       <h5 id="date4">时间</h5>
+                   </td>
+                   <td id="account4" style="text-align: center;vertical-align: middle">账户</td>
+               </tr>
+               </tbody>
+           </table>
+
+           <nav aria-label="">
+               <ul class="pager">
+                   <!--previous的反义词是following-->
+                   <li id="pre"><a href="#" style="color: #0f0f0f">上一页</a></li>
+                   <li id="fol"><a href="#" style="color: #0f0f0f">下一页</a></li>
+               </ul>
+           </nav>
+           <div id="pageInfo" style="float: right">
+               <i></i> 共
+               <span id="totalPage">**</span>页<span id="totalCount">***</span>条
+           </div>
+
+       </div>
+
+       <!--为了调节距离-->
+       <div class="col-md-1"></div>
+
+   </div>
+
+
+   <!--三、页脚部分-->
+   <footer class="container-fluid"></footer>
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+
+    <title>博客首页</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+    <script src="js/jquery-3.3.1.js"></script>
+    <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <style>
+        #blogSymbol {
+            width: 50px;
+            height: 50px;
+            display: inline-block;
+        }
+        #frame {
+            width: 70%;
+            height: 670px;
+            border: #f9f9f9 solid 1px;
+            border-radius: 5px;
+            box-shadow: 1px 1px 1px 1px #8c8c8c;
+            margin: 30px auto 30px;
+
+        }
+        .paddingTop {
+            padding-top: 10px;
+        }
+        .head {
+            border-bottom: 2px solid #8c8c8c;
+            padding-bottom: 5px;
+        }
+
+    </style>
+
+    <script>
+
+        /*设计一个方法  获取当前时间*/
+        function getDate () {
+            const date = new Date();
+            const year = date.getFullYear();        //年 ,从 Date 对象以四位数字返回年份
+            let month = date.getMonth() + 1;      //月 ,从 Date 对象返回月份 (0 ~ 11) ,date.getMonth()比实际月份少 1 个月
+            let day = date.getDate();             //日 ,从 Date 对象返回一个月中的某一天 (1 ~ 31)
+            let hours = date.getHours();          //小时 ,返回 Date 对象的小时 (0 ~ 23)
+            let minutes = date.getMinutes();      //分钟 ,返回 Date 对象的分钟 (0 ~ 59)
+            let seconds = date.getSeconds();      //秒 ,返回 Date 对象的秒数 (0 ~ 59)
+
+            //修改月份格式
+            if (month >= 1 && month <= 9) {
+                month = "0" + month;
+            }
+            //修改日期格式
+            if (day >= 0 && day <= 9) {
+                day = "0" + day;
+            }
+            //修改小时格式
+            if (hours >= 0 && hours <= 9) {
+                hours = "0" + hours;
+            }
+
+            //修改分钟格式
+            if (minutes >= 0 && minutes <= 9) {
+                minutes = "0" + minutes;
+            }
+            //修改秒格式
+            if (seconds >= 0 && seconds <= 9) {
+                seconds = "0" + seconds;
+            }
+
+            //获取当前系统时间  格式(yyyy-mm-dd hh:mm:ss)
+            return year + "-" + month + "-" + day + " " + hours + ":" + minutes + ":" + seconds;
+        }
+
+        $(function () {
+            /*获取数据使用get请求*/
+            $.get("user/findUser", {}, function (data) {
+                const msg = "欢迎回来，" + data.nickname;
+                $("#dropdownMenu1").html(msg);
+            });
+
+            $("#writeForm").submit(function () {
+
+                // 先通过ajax的get请求获得account（为了获得account，不得已而嵌套）
+                $.get("user/findUser", {}, function (data) {
+                    const account = data.account;
+
+                    // 再发送ajax请求，提交数据到服务器
+                    // ajax的serialize()增加其他参数的方式：1.param() 2.表单隐藏域。    （此处用方式1）
+                    // 还需要两个参数：date与account
+                    const date = getDate();
+                    const params = {date: date, account: account};
+                    const params_str = $.param(params);
+                    $.post("blog/publish", params_str+'&'+$("#writeForm").serialize(), function (data) {
+                        if (data.flag) {
+                            // 发布成功，跳转页面
+                            alert("发布成功");
+                            /*Location.href = "user.html";  也不知道为啥这个就是跳转不过去*/
+                            window.location.replace("user.html");
+                        } else {
+                            alert("发布失败");
+                            $("#errorMsg").html(data.errorMsg);
+                        }
+                    });
+                });
+
+                // 千万别忘写
+                return false;
+            });
+        });
+
+        // 设计一个方法   清除存储的SessionStorage数据（存有account）
+        // 如果没有这个方法，则在同一个页面中退出旧用户登录新用户后还是旧用户的信息
+        function clearAccount() {
+            window.sessionStorage.removeItem("account");
+        }
+
+    </script>
+</head>
+<body>
+
+   <!-- 一、页眉部分-->
+   <!--header是语义化标签-->
+   <!--定义容器，100%类型-->
+   <header class="container-fluid head">
+
+       <!--为了调节距离-->
+       <div class="col-md-2"></div>
+       <div class="col-md-2">
+           <!--class是响应式-->
+           <img src="img/blogSymbol.jpg" id="blogSymbol" class="img-responsive"  alt=""/>
+           <span>Java Tribe</span>
+       </div>
+
+       <div class="col-md-4">
+
+       </div>
+
+       <!--为了调节距离-->
+       <div class="col-md-1"></div>
+       <div class="col-md-2 paddingTop">
+
+           <!--用户界面（已登录）-->
+           <div id="user">
+               <!--以下是bootStrap下拉菜单-->
+               <div class="dropdown">
+                   <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                       （欢迎回来+，用户名）
+                   </button>
+                   <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                       <li><a href="writeBlog.html">写博客</a></li>
+                       <li><a href="myBlog.html">我的博客</a></li>
+                       <li><a href="userInfo.html">我的资料</a></li>
+                       <li role="separator" class="divider"></li>
+                       <li><a href="user.html">首页</a></li>
+                       <li><a href="/user/exit" onclick="clearAccount()">退出</a></li>
+                   </ul>
+               </div>
+
+           </div>
+       </div>
+       <!--为了调节距离-->
+       <div class="col-md-1"></div>
+   </header>
+   <!-- 二、主体部分-->
+   <div class="container main"></div>
+        <!--定义容器，留白类型-->
+   <div id="frame">
+       <!--Bootstrap之表单-->
+       <!--此处的action没有作用了，因为是发送ajax异步提交-->
+       <form id="writeForm" style="padding-top: 10px">
+           <div id="blogInput" style="width: 90%;padding-left: 8%">
+               <div class="form-group">
+                   <label for="title">标题</label>
+                   <input type="text" id="title" class="form-control" name="title" placeholder="title">
+               </div>
+
+               <div class="form-group">
+                   <label for="content">正文</label>
+                   <textarea id="content" class="form-control" name="content" rows="23" cols="30"></textarea>
+               </div>
+           </div>
+
+           <button type="submit" class="btn btn-default" style="margin-left: 47%">发布</button>
+       </form>
+       <div id="errorMsg" style="color: red;font-size: 15px;float: right" ></div>
+
+   </div>
+
+   <!--三、页脚部分-->
+   <footer class="container-fluid"></footer>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<c3p0-config>
+
+    <default-config>
+        <property name = "driverClass">com.mysql.cj.jdbc.Driver</property>
+<!--        <property name = "jdbcUrl">jdbc:mysql://localhost:3306/challenge2?useUnicode=true&amp;serverTimezone=GMT&amp;characterEncoding=utf-8&amp;useSSL=false</property>-->
+        <property name = "jdbcUrl">jdbc:mysql://localhost:3306/challenge2?serverTimezone=GMT</property>
+        <property name = "user">root</property>
+        <property name = "password">mysql1234</property>
+
+        <!--初始化申请数量-->
+        <property name = "initialPoolSize">5</property>
+
+        <!--最大数量-->
+        <property name = "maxPoolSize">20</property>
+
+    </default-config>
+</c3p0-config>

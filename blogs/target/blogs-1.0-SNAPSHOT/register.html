@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width,	 initial-scale=1">
+	<!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+
+	<title>注册页面</title>
+
+	<!-- Bootstrap -->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+	<script src="js/jquery-3.3.1.js"></script>
+	<!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+	<script src="js/bootstrap.min.js"></script>
+
+	<style>
+		#blogSymbol {
+			width: 50px;
+			height: 50px;
+			display: inline-block;
+		}
+		#registerForm,#errorMsg {
+			padding-top: 50px;
+		}
+		#securityPart {
+			padding-top: 100px;
+		}
+		.paddingTop {
+			padding-top: 10px;
+		}
+		.head {
+			border-bottom: 2px solid #8c8c8c;
+			padding-bottom: 5px;
+		}
+
+	</style>
+
+	<script>
+		/*
+
+		用js进行表单的校验：
+		 	1.账号：单词字符，长度8到20位(数字也是字符喔)
+			2.密码：单词字符，长度8到20位
+			3.昵称：非空
+
+		 */
+
+		// 校验账号
+		function checkAccount() {
+
+			// 为了避免Duplicated jQuery selector的警告，就把其赋值给var
+			const accountInput = $("#account");
+			// 1. 获取账号
+			const account = accountInput.val();
+			// 2. 定义正则
+			const reg_account = /^\w{8,20}$/;
+			// 3. 判断，并给出提示信息
+			// 返回 布尔类型的flag
+			const flag = reg_account.test(account);
+			if (flag) {
+				// 用户名合法
+				accountInput.css("border", "");
+			} else {
+				// 用户名不合法   加一个红色的边框
+				accountInput.css("border", "1px solid red");
+			}
+
+			return flag;
+		}
+
+		// 校验密码
+		function checkPassword() {
+
+			// 为了避免Duplicated jQuery selector的警告，就把其赋值给var
+			const passwordInput = $("#password");
+			// 1. 获取密码
+			const password = passwordInput.val();
+			// 2. 定义正则
+			const reg_password = /^\w{8,20}$/;
+			// 3. 判断，并给出提示信息
+			// 返回 布尔类型的flag
+			const flag = reg_password.test(password);
+			if (flag) {
+				// 用户名合法
+				passwordInput.css("border", "");
+			} else {
+				// 用户名不合法   加一个红色的边框
+				passwordInput.css("border", "1px solid red");
+			}
+
+			return flag;
+		}
+
+		// 校验昵称
+		function checkNickname() {
+
+			// 为了避免Duplicated jQuery selector的警告，就把其赋值给var
+			const nicknameInput = $("#nickname");
+			// 1. 获取昵称
+			const nickname = nicknameInput.val();
+			// 2. 判断，并给出提示信息
+			// 返回 布尔类型的flag
+			let flag;
+			if (nickname != null && nickname !== "") {
+
+				// 昵称合法
+				nicknameInput.css("border", "");
+				flag = true;
+			} else {
+				// 昵称不合法   加一个红色的边框
+				nicknameInput.css("border", "1px solid red");
+				flag = false;
+			}
+
+			return flag;
+		}
+
+		// 校验第二次输入的密码
+		function checkConPassword() {
+
+			// 为了避免Duplicated jQuery selector的警告，就把其赋值给var
+			const conPasswordInput = $("#conPassword");
+			const passwordInput = $("#password");
+			// 1. 获取conPassword
+			const conPassword = conPasswordInput.val();
+			const password = passwordInput.val();
+			// 2. 判断，并给出提示信息
+			// 返回 布尔类型的flag
+			let flag;
+			if (conPassword === password) {
+
+
+				// 密码一致
+				conPasswordInput.css("border", "");
+				flag = true;
+			} else {
+				// 密码不一致   加一个红色的边框
+				conPasswordInput.css("border", "1px solid red");
+				flag = false;
+			}
+
+			return flag;
+		}
+
+		// 先写onLoad入口函数
+		$(function () {
+			// 一、当表单提交时，调用所有的校验方法
+			// （当提交表单时，会发生submit事件）
+			// 而调用submit方法：当提交表单时，规定发生submit事件时运行的函数
+			// 如果该函数没有返回值或者返回值为true，则提交表单。如果为false，则不提交
+			$("#registerForm").submit(function () {
+				if (checkAccount() && checkPassword() && checkNickname() && checkConPassword()) {
+					// 1. 发送数据到服务器
+					// 校验通过，便发送ajax请求，提交表单数据
+					// this是js对象，要转成jquery对象；form对象.serialize() --->  将表单的内容序列化为字符串；function是回调函数
+					// serialize的字符串格式：{flag:true & errorMsg:"注册失败"}
+					// post一般用于更新资源
+
+					$.post("user/register", $(this).serialize(), function (data) {
+						// 处理服务器响应的数据  data
+
+						if (data.flag) {
+							// 跳转成功页面 user.html
+							location.href = "user.html";
+
+						} else {
+							// 注册失败，给errorMsg添加提示信息
+							$("#errorMsg").html(data.errorMsg);
+
+						}
+					});
+				}
+				// 2. 不进行跳转页面
+				return false;
+
+			});
+
+			// 二、当某一个组件失去焦点时，调用对应的校验方法
+
+			// 注意：blur事件的参数是checkAccount而不是checkAccount()
+			// 因为在js中，前者是一个函数名，可理解为一个指针。并不立即执行，而是触发blur事件后执行，最后是函数赋给了blur。
+			          // 后者表示在blur事件之前就执行了checkAccount方法，导致将返回值赋给了blur。
+			// 刚好与上面的submit事件的参数形成对比！！
+			$("#account").blur(checkAccount);
+			$("#password").blur(checkPassword);
+			$("#nickname").blur(checkNickname);
+			// 校验第二次输入的密码时，不再触发blur事件
+		});
+
+	</script>
+</head>
+
+<body>
+
+<!-- 一、页眉部分-->
+<!--header是语义化标签-->
+<!--定义容器，100%类型-->
+<header class="container-fluid head">
+
+	<!--为了调节距离-->
+	<div class="col-md-2"></div>
+	<div class="col-md-2">
+		<!--class是响应式-->
+		<img src="img/blogSymbol.jpg" id="blogSymbol" class="img-responsive" />
+		<span>Java Tribe</span>
+	</div>
+
+	<div class="col-md-4">
+
+	</div>
+
+	<!--为了调节距离-->
+	<div class="col-md-1"></div>
+	<div class="col-md-2 paddingTop">
+		<button type="button" class="btn btn-success" id="loginButtonUP"
+				onclick="window.location.href='login.html'">登录</button>
+		<button type="button" class="btn btn-success" id="RegisterButton"
+				onclick="window.location.href='register.html'">注册</button>
+	</div>
+	<!--为了调节距离-->
+	<div class="col-md-1"></div>
+</header>
+
+<!-- 二、主体部分-->
+<!--定义容器，留白类型-->
+<div class="container main">
+
+	<!--借鉴了网页QQ注册的部分内容-->
+	<div id="registerWelcome">
+		<h1 style="float: right">欢迎注册 JavaTribe 博客</h1>
+		<br>
+		<br>
+		<br>
+		<br>
+		<h3 style="float: right">即刻，乐在交流</h3>
+	</div>
+	<div id="errorMsg" style="color: red; text-align: center" ></div>
+	<!--Bootstrap之表单-->
+	<!--此处的action没有作用了，因为是发送ajax异步提交-->
+	<form id="registerForm" action="#" style="padding-top: 100px">
+		<div class="form-group">
+			<label for="account">账号（至少8位）</label>
+			<input type="text" class="form-control" id="account" name="account" placeholder="account">
+		</div>
+		<div class="form-group">
+			<label for="nickname">昵称</label>
+			<input type="text" class="form-control" id="nickname" name="nickname" placeholder="nickname">
+		</div>
+		<div class="form-group">
+			<label for="password">密码（至少8位）</label>
+			<input type="password" class="form-control" id="password" name="password" placeholder="Password">
+		</div>
+		<div class="form-group">
+			<label for="conPassword">确认密码</label>
+				<input type="password" class="form-control" id="conPassword" placeholder="Password">
+		</div>
+		<div class="form-group" id="securityPart">
+			<label for="securityCode">验证码</label>
+			<input type="text" id="securityCode" name="securityCode" size="6" maxlength="6">
+			<img src="checkCode" height="32px" alt="" onclick="changeCheckCode(this)">
+			<script>
+				//图片点击事件
+				function changeCheckCode(img) {
+					img.src = "checkCode?" + new Date().getTime();
+				}
+			</script>
+		</div>
+		<br>
+		<br>
+		<br>
+		<button type="submit" class="btn btn-success" style="float:right">创建新用户</button>
+		<button type="button" class="btn btn-default" style="float:right;margin-right: 50px"
+				onclick="window.location.href='login.html'">返回登录页面</button>
+
+	</form>
+
+</div>
+
+
+<!--三、页脚部分-->
+<footer class="container-fluid"></footer>
+<br>
+<br>
+<br>
+</body>
+
+</html>

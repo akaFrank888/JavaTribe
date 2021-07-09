@@ -1,0 +1,8 @@
+service\impl\UserServiceImpl.class
+web\filter\CharchaterFilter.class
+dao\impl\UserDaoImpl.class
+domain\User.class
+service\UserService.class
+dao\UserDao.class
+web\servlet\CheckCodeServlet.class
+web\servlet\RegisterUserServlet.class
